@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
 
   background: {
     ...StyleSheet.absoluteFillObject,
+
     width: "100%",
     height: "100%",
   },
