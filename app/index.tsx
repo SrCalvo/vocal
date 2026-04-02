@@ -2,6 +2,7 @@ import { View, Image, StyleSheet } from "react-native";
 import { useEffect } from "react";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { StatusBar } from "expo-status-bar";
+import { useRouter } from "expo-router";
 
 import PlayButton from "../components/ui/home/PlayButton";
 import VowelButton from "../components/ui/home/VowelButton";
@@ -12,6 +13,8 @@ export default function Home() {
       ScreenOrientation.OrientationLock.LANDSCAPE
     );
   }, []);
+
+  const router = useRouter();
 
   const vowels = [
     { letter: "A", img: require("../assets/index/vowels/A.png"), style: styles.vowelA },
@@ -51,7 +54,10 @@ export default function Home() {
         <Image key={index} source={img} style={style} />
       ))}
 
-      <PlayButton style={styles.playButton} />
+      <PlayButton
+        style={styles.playButton}
+        onPress={() => router.push("/menu")}
+      />
     </View>
   );
 }
@@ -67,7 +73,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
 
     width: "100%",
-    height: "100%",
+    height: "110%",
   },
 
   playButton: {

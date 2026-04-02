@@ -1,5 +1,6 @@
 import { Pressable, Image, StyleSheet, Animated } from "react-native";
 import { useEffect, useRef } from "react";
+import { Audio } from "expo-av";
 
 export default function AnimatedButton({ source, onPress, customStyle }) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -19,15 +20,42 @@ export default function AnimatedButton({ source, onPress, customStyle }) {
         }),
       ])
     );
-    
+
     animation.start();
-    
+
     return () => animation.stop();
   }, [scale]);
 
+  const handlePress = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require("../../../assets/sounds/ClickSelect.mp3")
+      );
+
+      await sound.playAsync();
+
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
+
+      if (onPress) {
+        setTimeout(() => {
+          onPress();
+        }, 200);
+      }
+    } catch (error) {
+      console.log("Error playing sound:", error);
+      if (onPress) {
+        onPress();
+      }
+    }
+  };
+
   return (
     <Animated.View style={[{ transform: [{ scale }] }, customStyle]}>
-      <Pressable onPress={onPress} style={styles.button}>
+      <Pressable onPress={handlePress} style={styles.button}>
         <Image source={source} style={styles.icon} />
       </Pressable>
     </Animated.View>
@@ -44,7 +72,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    width: 115,
-    height: 115,
+    width: "85%",
+    height: "85%",
   },
 });

@@ -1,16 +1,13 @@
-import { View, Image, StyleSheet, Pressable, Animated } from "react-native";
-import { useEffect, useRef } from "react";
+import { View, Image, StyleSheet, Pressable } from "react-native";
+import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { StatusBar } from "expo-status-bar";
-
+import { Audio } from "expo-av";
+import AnimatedButton from "../components/ui/anim/AnimatedButton";
 
 export default function MenuScreen() {
   const router = useRouter();
-
-  const scaleOjo = useRef(new Animated.Value(1)).current;
-  const scaleOido = useRef(new Animated.Value(1)).current;
-  const scaleMano = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     ScreenOrientation.lockAsync(
@@ -18,41 +15,32 @@ export default function MenuScreen() {
     );
   }, []);
 
-  useEffect(() => {
-    const createAnimation = (scale) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(scale, {
-            toValue: 1.2,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(scale, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
+  const navigateWithSound = async (route) => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/sounds/ClickSelect.mp3")
       );
 
-    const anim1 = createAnimation(scaleOjo);
-    const anim2 = createAnimation(scaleOido);
-    const anim3 = createAnimation(scaleMano);
+      await sound.playAsync();
 
-    anim1.start();
-    anim2.start();
-    anim3.start();
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
 
-    return () => {
-      anim1.stop();
-      anim2.stop();
-      anim3.stop();
-    };
-  }, [scaleOjo, scaleOido, scaleMano]);
+      setTimeout(() => {
+        router.push(route);
+      }, 200);
+    } catch (error) {
+      console.log("Error playing sound:", error);
+      router.push(route);
+    }
+  };
 
   return (
     <View style={styles.container}>
-        <StatusBar hidden />
+      <StatusBar hidden />
 
       {/* Fondo */}
       <Image
@@ -87,57 +75,30 @@ export default function MenuScreen() {
         style={styles.huevo2}
       />
 
-      {/* Botón Vista */}
-      <Animated.View
-        style={[
-          styles.button,
-          styles.btnVista,
-          { transform: [{ scale: scaleOjo }] }
-        ]}
-      >
-        <Pressable onPress={() => router.push("/vista")}>
-          <Image
-            source={require("../assets/menu/images/ojo.png")}
-            style={styles.icon}
-          />
-        </Pressable>
-      </Animated.View>
+      {/* Botón Vista*/}
+      <AnimatedButton
+        source={require("../assets/menu/images/ojo.png")}
+        onPress={() => router.push("/vista")}
+        customStyle={styles.btnVista}
+      />
 
-      {/* Botón Oído */}
-      <Animated.View
-        style={[
-          styles.button,
-          styles.btnOido,
-          { transform: [{ scale: scaleOido }] }
-        ]}
-      >
-        <Pressable onPress={() => router.push("/oido")}>
-          <Image
-            source={require("../assets/menu/images/oido.png")}
-            style={styles.icon}
-          />
-        </Pressable>
-      </Animated.View>
+      {/* Botón Oído*/}
+      <AnimatedButton
+        source={require("../assets/menu/images/oido.png")}
+        onPress={() => router.push("/oido")}
+        customStyle={styles.btnOido}
+      />
 
-      {/* Botón Tacto */}
-      <Animated.View
-        style={[
-          styles.button,
-          styles.btnTacto,
-          { transform: [{ scale: scaleMano }] }
-        ]}
-      >
-        <Pressable onPress={() => router.push("/tacto")}>
-          <Image
-            source={require("../assets/menu/images/mano.png")}
-            style={styles.icon}
-          />
-        </Pressable>
-      </Animated.View>
+      {/* Botón Tacto*/}
+      <AnimatedButton
+        source={require("../assets/menu/images/mano.png")}
+        onPress={() => router.push("/tacto")}
+        customStyle={styles.btnTacto}
+      />
 
-      {/* Botón Casa */}
+      {/* Botón Casa*/}
       <Pressable
-        onPress={() => router.push("/")}
+        onPress={() => navigateWithSound("/")}
         style={styles.btnCasa}
       >
         <Image
@@ -160,21 +121,6 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 
-  button: {
-    position: "absolute",
-    width: 150,
-    height: 145,
-    backgroundColor: "rgba(132, 131, 129, 0.33)",
-    borderRadius: 70,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  icon: {
-    width: 135,
-    height: 135,
-  },
-
   iconCasa: {
     width: 100,
     height: 100,
@@ -182,18 +128,27 @@ const styles = StyleSheet.create({
 
   // BOTONES
   btnVista: {
+    position: "absolute",
     top: "38%",
     left: "22%",
+    width: 150,
+    height: 145,
   },
 
   btnOido: {
+    position: "absolute",
     top: "37%",
     right: "22%",
+    width: 150,
+    height: 145,
   },
 
   btnTacto: {
+    position: "absolute",
     top: "38%",
     left: "41.5%",
+    width: 150,
+    height: 145,
   },
 
   btnCasa: {
