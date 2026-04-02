@@ -138,7 +138,7 @@ export default function Tacto() {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../assets/images/fondo.png")}
+        source={require("../assets/images/tacto-bg.png")}
         style={styles.backgroundImage}
       />
 
