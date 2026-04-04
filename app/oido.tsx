@@ -1,280 +1,162 @@
-import { View, Image, TouchableOpacity, StyleSheet, Dimensions, Modal, Text } from "react-native";
-import { Audio } from "expo-av";
-import { useRouter } from "expo-router";
+// app/oido.tsx (o donde tengas OidoScreen)
+import { View, Image, StyleSheet, Dimensions } from "react-native";
+import { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import * as ScreenOrientation from "expo-screen-orientation";
+import { useRouter } from 'expo-router'; // Si usas Expo Router
+// import { useNavigation } from '@react-navigation/native'; // Si usas React Navigation
+
+import VocalCard from "../components/ui/oido/VocalCard";
+import AnimalModal from "../components/ui/oido/AnimalModal";
+import NavigationButtons from "../components/ui/NavigationButtons";
+import { useSound } from "../components/ui/oido/useSound";
+import { vocales, animalData } from "../components/ui/oido/data";
 
 const { width, height } = Dimensions.get("window");
 
-export default function VocalesScreen() {
-  const router = useRouter();
+export default function OidoScreen() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentAnimal, setCurrentAnimal] = useState({ image: null, name: "" });
+  const [currentAnimal, setCurrentAnimal] = useState<any>(null);
+  
+  // Para Expo Router
+  const router = useRouter();
+  
+  // Para React Navigation estándar:
+  // const navigation = useNavigation();
 
-  // Mapeo de animales por cada vocal
-  const animalData = {
-    A: { image: require("../assets/images/vista/abeja.png"), name: "Abeja" },
-    E: { image: require("../assets/images/vista/elefante.png"), name: "Elefante" },
-    I: { image: require("../assets/images/vista/iguana.png"), name: "Iguana" },
-    O: { image: require("../assets/images/vista/oso.png"), name: "Oso" },
-    U: { image: require("../assets/images/vista/uva.png"), name: "Uva" },
+  const { play } = useSound();
+
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+  }, []);
+
+  const handlePress = (soundFile: any, vocal: string) => {
+    const animal = animalData[vocal];
+    setCurrentAnimal(animal);
+    setModalVisible(true);
+    play(soundFile, () => setModalVisible(false));
   };
 
-  const playSound = async (soundFile: any, vocal: string) => {
-    try {
-      // Mostrar modal con la imagen del animal
-      const animal = animalData[vocal as keyof typeof animalData];
-      if (animal) {
-        setCurrentAnimal(animal);
-        setModalVisible(true);
-      }
-
-      const { sound } = await Audio.Sound.createAsync(soundFile);
-      await sound.playAsync();
-      
-      // Liberar recursos después de reproducir y cerrar modal
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          sound.unloadAsync();
-          setModalVisible(false);
-        }
-      });
-    } catch (error) {
-      console.error("Error playing sound:", error);
-      setModalVisible(false);
-    }
+  // Funciones de navegación
+  const goToMenu = () => {
+    router.push('/menu'); // Expo Router
+    // navigation.navigate('Menu'); // React Navigation estándar
   };
 
-  const data = [
-    { letra: require("../assets/letras/A.png"), sonido: require("../assets/sounds/abeja.mp3"), vocal: "A" },
-    { letra: require("../assets/letras/E.png"), sonido: require("../assets/sounds/elefante.mp3"), vocal: "E" },
-    { letra: require("../assets/letras/I.png"), sonido: require("../assets/sounds/iguana.mp3"), vocal: "I" },
-    { letra: require("../assets/letras/O.png"), sonido: require("../assets/sounds/oso.mp3"), vocal: "O" },
-    { letra: require("../assets/letras/U.png"), sonido: require("../assets/sounds/uva.mp3"), vocal: "U" },
-  ];
+  const goToNextScreen = () => {
+    // Por ejemplo, ir a la siguiente actividad
+    router.push('/tacto'); // O donde quieras
+  };
+
+  // Posiciones personalizadas
+  const positions = {
+    A: { position: 'absolute', top: "50%", left: "10%" },
+    E: { position: 'absolute', top: "35%", left: "30%" },
+    I: { position: 'absolute', top: "50%", left: "48%" },
+    O: { position: 'absolute', top: "35%", right: "30%" },
+    U: { position: 'absolute', top: "50%", right: "10%" },
+  };
+
+  // Tamaños personalizados para cada letra
+  const letterSizes = {
+    A: { width: width * 0.12, height: width * 0.12 },
+    E: { width: width * 0.12, height: width * 0.12 },
+    I: { width: width * 0.12, height: width * 0.12 },
+    O: { width: width * 0.12, height: width * 0.12 },
+    U: { width: width * 0.12, height: width * 0.12 },
+  };
+
+  // Posiciones personalizadas para cada bocina
+  const speakerPositions = {
+    A: { marginTop: height * 0.02 },
+    E: { marginTop: height * 0.02 },
+    I: { marginTop: height * 0.02 },
+    O: { marginTop: height * 0.02 },
+    U: { marginTop: height * 0.02 },
+  };
 
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
-      
+      <StatusBar hidden />
+
       <Image
         source={require("../assets/images/tacto-bg.png")}
         style={styles.background}
-        resizeMode="cover"
       />
 
-      <View style={styles.centerContent}>
-        {data.map((item, index) => (
-          <View key={index} style={styles.card}>
-            {/* La letra completa es táctil */}
-            <TouchableOpacity 
-              onPress={() => playSound(item.sonido, item.vocal)}
-              activeOpacity={0.7}
-              style={styles.letterContainer}
-            >
-              <Image source={item.letra} style={styles.letterImage} resizeMode="contain" />
-            </TouchableOpacity>
-            
-            {/* Botón de bocina independiente */}
-            <TouchableOpacity 
-              onPress={() => playSound(item.sonido, item.vocal)}
-              activeOpacity={0.7}
-              style={styles.speakerButton}
-            >
-              <Image
-                source={require("../assets/images/bocina.png")}
-                style={styles.speakerIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </View>
-        ))}
+      <View style={styles.absoluteContainer}>
+        <VocalCard
+          {...vocales[0]}
+          onPress={handlePress}
+          cardStyle={positions.A}
+          letterStyle={letterSizes.A}
+          speakerStyle={speakerPositions.A}
+        />
+
+        <VocalCard
+          {...vocales[1]}
+          onPress={handlePress}
+          cardStyle={positions.E}
+          letterStyle={letterSizes.E}
+          speakerStyle={speakerPositions.E}
+        />
+
+        <VocalCard
+          {...vocales[2]}
+          onPress={handlePress}
+          cardStyle={positions.I}
+          letterStyle={letterSizes.I}
+          speakerStyle={speakerPositions.I}
+        />
+
+        <VocalCard
+          {...vocales[3]}
+          onPress={handlePress}
+          cardStyle={positions.O}
+          letterStyle={letterSizes.O}
+          speakerStyle={speakerPositions.O}
+        />
+
+        <VocalCard
+          {...vocales[4]}
+          onPress={handlePress}
+          cardStyle={positions.U}
+          letterStyle={letterSizes.U}
+          speakerStyle={speakerPositions.U}
+        />
       </View>
 
-      <View style={styles.bottomBar}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={styles.navButton}
-          activeOpacity={0.7}
-        >
-          <Image
-            source={require("../assets/images/back.png")}
-            style={styles.navIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
+      {/* Botones de navegación */}
+      <NavigationButtons
+        onLeftPress={goToMenu}  // Botón izquierdo va al menú
+        onRightPress={goToNextScreen}  // Botón derecho va a siguiente pantalla
+        leftPosition={{ left: "3%", top: "45%" }}
+        rightPosition={{ right: "3%", top: "45%" }}
+        buttonSize={55}
+      />
 
-        <TouchableOpacity 
-          onPress={() => router.push("/menu")} 
-          style={styles.navButton}
-          activeOpacity={0.7}
-        >
-          <Image
-            source={require("../assets/images/back.png")}
-            style={styles.navIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      </View>
-
-      {/* Modal para mostrar la imagen del animal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <AnimalModal
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {currentAnimal.image && (
-              <>
-                <Image 
-                  source={currentAnimal.image} 
-                  style={styles.animalImage}
-                  resizeMode="contain"
-                />
-                <Text style={styles.animalName}>{currentAnimal.name}</Text>
-              </>
-            )}
-            <Text style={styles.listeningText}>🔊 Escuchando... 🔊</Text>
-          </View>
-        </View>
-      </Modal>
+        animal={currentAnimal}
+        onClose={() => setModalVisible(false)}
+        modalWidth={"70%"}
+        imageSize={"40%"}
+        fontSize={"8%"}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f0f0f0",
-  },
-
+  container: { flex: 1 },
   background: {
     position: "absolute",
     width: "100%",
-    height: "100%",
+    height: "110%",
+    top: 0,
   },
-
-  centerContent: {
+  absoluteContainer: {
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    gap: width * 0.03,
-  },
-
-  card: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: height * 0.08,
-    flex: 1,
-  },
-
-  letterContainer: {
-    padding: 10,
-  },
-
-  letterImage: {
-    width: width * 0.12,
-    height: width * 0.12,
-    minWidth: 50,
-    minHeight: 50,
-    maxWidth: 120,
-    maxHeight: 120,
-  },
-
-  speakerButton: {
-    padding: 10,
-  },
-
-  speakerIcon: {
-    width: width * 0.08,
-    height: width * 0.08,
-    minWidth: 35,
-    minHeight: 35,
-    maxWidth: 70,
-    maxHeight: 70,
-  },
-
-  bottomBar: {
-    position: "absolute",
-    bottom: 30,
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 30,
-  },
-
-  navButton: {
-    width: width * 0.1,
-    height: width * 0.1,
-    minWidth: 40,
-    minHeight: 40,
-    maxWidth: 60,
-    maxHeight: 60,
-    backgroundColor: "rgba(255,255,255,0.8)",
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-
-  navIcon: {
-    width: "60%",
-    height: "60%",
-  },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 30,
-    padding: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    width: width * 0.7,
-    minWidth: 250,
-    maxWidth: 400,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-
-  animalImage: {
-    width: width * 0.4,
-    height: width * 0.4,
-    minWidth: 150,
-    minHeight: 150,
-    maxWidth: 250,
-    maxHeight: 250,
-    marginBottom: 20,
-  },
-
-  animalName: {
-    fontSize: width * 0.06,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
-    textAlign: "center",
-  },
-
-  listeningText: {
-    fontSize: width * 0.04,
-    color: "#666",
-    marginTop: 10,
-    textAlign: "center",
+    position: "relative",
   },
 });
