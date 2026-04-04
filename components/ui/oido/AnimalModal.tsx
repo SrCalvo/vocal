@@ -2,7 +2,16 @@ import { Modal, View, Image, Text, StyleSheet, Dimensions } from "react-native";
 
 const { width } = Dimensions.get("window");
 
-export default function AnimalModal({ visible, animal, onClose }: any) {
+interface Props {
+  visible: boolean;
+  animal?: {
+    image?: any;
+    name?: string;
+  };
+  onClose: () => void;
+}
+
+export default function AnimalModal({ visible, animal, onClose }: Props) {
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -23,12 +32,12 @@ export default function AnimalModal({ visible, animal, onClose }: any) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(2, 2, 2, 0.3)",
+    backgroundColor: "rgba(2,2,2,0.3)",
     justifyContent: "center",
     alignItems: "center",
   },
   content: {
-    backgroundColor: "rgba(2, 2, 2, 0.3)",
+    backgroundColor: "rgba(2,2,2,0.3)",
     borderRadius: 30,
     padding: 30,
     alignItems: "center",
@@ -42,10 +51,10 @@ const styles = StyleSheet.create({
   name: {
     fontSize: width * 0.08,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#fff",
   },
   text: {
     marginTop: 1,
-    color: "rgb(216, 130, 130)fff",
+    color: "#d88282",
   },
 });

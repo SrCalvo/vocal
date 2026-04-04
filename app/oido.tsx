@@ -1,10 +1,8 @@
-// app/oido.tsx (o donde tengas OidoScreen)
 import { View, Image, StyleSheet, Dimensions } from "react-native";
 import { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { useRouter } from 'expo-router'; // Si usas Expo Router
-// import { useNavigation } from '@react-navigation/native'; // Si usas React Navigation
+import { useRouter } from "expo-router";
 
 import VocalCard from "../components/ui/oido/VocalCard";
 import AnimalModal from "../components/ui/oido/AnimalModal";
@@ -12,18 +10,13 @@ import NavigationButtons from "../components/ui/NavigationButtons";
 import { useSound } from "../components/ui/oido/useSound";
 import { vocales, animalData } from "../components/ui/oido/data";
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 export default function OidoScreen() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentAnimal, setCurrentAnimal] = useState<any>(null);
-  
-  // Para Expo Router
-  const router = useRouter();
-  
-  // Para React Navigation estándar:
-  // const navigation = useNavigation();
+  const [selectedAnimal, setSelectedAnimal] = useState<any>(null);
 
+  const router = useRouter();
   const { play } = useSound();
 
   useEffect(() => {
@@ -32,42 +25,36 @@ export default function OidoScreen() {
 
   const handlePress = (soundFile: any, vocal: string) => {
     const animal = animalData[vocal];
-    setCurrentAnimal(animal);
+    setSelectedAnimal(animal);
     setModalVisible(true);
     play(soundFile, () => setModalVisible(false));
   };
 
-  // Funciones de navegación
   const goToMenu = () => {
-    router.push('/menu'); // Expo Router
-    // navigation.navigate('Menu'); // React Navigation estándar
+    router.push("/menu");
   };
 
-  const goToNextScreen = () => {
-    // Por ejemplo, ir a la siguiente actividad
-    router.push('/tacto'); // O donde quieras
+  const goToNext = () => {
+    router.push("/tacto");
   };
 
-  // Posiciones personalizadas
   const positions = {
-    A: { position: 'absolute', top: "50%", left: "10%" },
-    E: { position: 'absolute', top: "35%", left: "30%" },
-    I: { position: 'absolute', top: "50%", left: "48%" },
-    O: { position: 'absolute', top: "35%", right: "30%" },
-    U: { position: 'absolute', top: "50%", right: "10%" },
+    A: { position: "absolute", top: "40%", left: "5%" },
+    E: { position: "absolute", top: "25%", left: "25%" },
+    I: { position: "absolute", top: "40%", left: "40%" },
+    O: { position: "absolute", top: "25%", right: "25%" },
+    U: { position: "absolute", top: "40%", right: "5%" },
   };
 
-  // Tamaños personalizados para cada letra
-  const letterSizes = {
-    A: { width: width * 0.12, height: width * 0.12 },
-    E: { width: width * 0.12, height: width * 0.12 },
-    I: { width: width * 0.12, height: width * 0.12 },
-    O: { width: width * 0.12, height: width * 0.12 },
-    U: { width: width * 0.12, height: width * 0.12 },
+  const sizes = {
+    A: { width: "90%", height: "95%" },
+    E: { width: "90%", height: "95%" },
+    I: { width: "90%", height: "95%" },
+    O: { width: "90%", height: "95%" },
+    U: { width: "90%", height: "95%" },
   };
 
-  // Posiciones personalizadas para cada bocina
-  const speakerPositions = {
+  const speakerOffsets = {
     A: { marginTop: height * 0.02 },
     E: { marginTop: height * 0.02 },
     I: { marginTop: height * 0.02 },
@@ -80,7 +67,7 @@ export default function OidoScreen() {
       <StatusBar hidden />
 
       <Image
-        source={require("../assets/images/tacto-bg.png")}
+        source={require("../assets/images/oido-bg.png")}
         style={styles.background}
       />
 
@@ -89,55 +76,54 @@ export default function OidoScreen() {
           {...vocales[0]}
           onPress={handlePress}
           cardStyle={positions.A}
-          letterStyle={letterSizes.A}
-          speakerStyle={speakerPositions.A}
+          letterStyle={sizes.A}
+          speakerStyle={speakerOffsets.A}
         />
 
         <VocalCard
           {...vocales[1]}
           onPress={handlePress}
           cardStyle={positions.E}
-          letterStyle={letterSizes.E}
-          speakerStyle={speakerPositions.E}
+          letterStyle={sizes.E}
+          speakerStyle={speakerOffsets.E}
         />
 
         <VocalCard
           {...vocales[2]}
           onPress={handlePress}
           cardStyle={positions.I}
-          letterStyle={letterSizes.I}
-          speakerStyle={speakerPositions.I}
+          letterStyle={sizes.I}
+          speakerStyle={speakerOffsets.I}
         />
 
         <VocalCard
           {...vocales[3]}
           onPress={handlePress}
           cardStyle={positions.O}
-          letterStyle={letterSizes.O}
-          speakerStyle={speakerPositions.O}
+          letterStyle={sizes.O}
+          speakerStyle={speakerOffsets.O}
         />
 
         <VocalCard
           {...vocales[4]}
           onPress={handlePress}
           cardStyle={positions.U}
-          letterStyle={letterSizes.U}
-          speakerStyle={speakerPositions.U}
+          letterStyle={sizes.U}
+          speakerStyle={speakerOffsets.U}
         />
       </View>
 
-      {/* Botones de navegación */}
       <NavigationButtons
-        onLeftPress={goToMenu}  // Botón izquierdo va al menú
-        onRightPress={goToNextScreen}  // Botón derecho va a siguiente pantalla
-        leftPosition={{ left: "3%", top: "45%" }}
-        rightPosition={{ right: "3%", top: "45%" }}
-        buttonSize={55}
+        onLeftPress={goToMenu}
+        onRightPress={goToMenu}
+        leftPosition={{ left: "3%", top: "80%" }}
+        rightPosition={{ right: "3%", top: "80%" }}
+        buttonSize={70}
       />
 
       <AnimalModal
         visible={modalVisible}
-        animal={currentAnimal}
+        animal={selectedAnimal}
         onClose={() => setModalVisible(false)}
         modalWidth={"70%"}
         imageSize={"40%"}
@@ -148,15 +134,19 @@ export default function OidoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
   background: {
     position: "absolute",
     width: "100%",
-    height: "110%",
-    top: 0,
+    height: "100%",
   },
   absoluteContainer: {
-    flex: 1,
-    position: "relative",
+    position: "absolute",
+    width: "100%",
+    height: "100%",
   },
 });

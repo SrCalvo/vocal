@@ -1,9 +1,6 @@
-// components/ui/NavigationButtons.tsx
-import { View, TouchableOpacity, Image, StyleSheet, Dimensions } from "react-native";
+import { TouchableOpacity, Image, StyleSheet } from "react-native";
 
-const { width, height } = Dimensions.get("window");
-
-interface NavigationButtonsProps {
+interface Props {
   onLeftPress: () => void;
   onRightPress: () => void;
   leftPosition?: {
@@ -19,82 +16,56 @@ interface NavigationButtonsProps {
     right?: number | string;
   };
   buttonSize?: number | { width: number; height: number };
-  leftIcon?: any; // Icono personalizado para izquierda
-  rightIcon?: any; // Icono personalizado para derecha
-  invertLeft?: boolean; // Si invertir el icono izquierdo
-  invertRight?: boolean; // Si invertir el icono derecho
-  leftButtonStyle?: object;
-  rightButtonStyle?: object;
+  leftIcon?: any;
+  rightIcon?: any;
+  invertLeft?: boolean;
+  invertRight?: boolean;
+  leftStyle?: object;
+  rightStyle?: object;
   iconStyle?: object;
 }
 
-export default function NavigationButtons({ 
-  onLeftPress, 
+export default function NavigationButtons({
+  onLeftPress,
   onRightPress,
-  leftPosition = { left: "5%", top: "50%" },
-  rightPosition = { right: "5%", top: "50%" },
+  leftPosition = { left: "5%", top: "90%" },
+  rightPosition = { right: "5%", top: "90%" },
   buttonSize = { width: 60, height: 60 },
   leftIcon = require("../../assets/images/back.png"),
   rightIcon = require("../../assets/images/back.png"),
-  invertLeft = true,  // Por defecto invierte el izquierdo
-  invertRight = false, // Por defecto no invierte el derecho
-  leftButtonStyle = {},
-  rightButtonStyle = {},
-  iconStyle = {}
-}: NavigationButtonsProps) {
-  
-  // Manejar diferentes formatos de buttonSize
-  const getButtonSize = () => {
-    if (typeof buttonSize === 'number') {
-      return { width: buttonSize, height: buttonSize };
-    }
-    return buttonSize;
-  };
-
-  const size = getButtonSize();
+  invertLeft = true,
+  invertRight = false,
+  leftStyle = {},
+  rightStyle = {},
+  iconStyle = {},
+}: Props) {
+  const size =
+    typeof buttonSize === "number"
+      ? { width: buttonSize, height: buttonSize }
+      : buttonSize;
 
   return (
     <>
-      {/* Botón izquierdo */}
-      <TouchableOpacity 
-        onPress={onLeftPress} 
-        style={[
-          styles.button, 
-          leftPosition, 
-          size, 
-          leftButtonStyle
-        ]}
+      <TouchableOpacity
+        onPress={onLeftPress}
+        style={[styles.button, leftPosition, size, leftStyle]}
         activeOpacity={0.7}
       >
-        <Image 
-          source={leftIcon} 
-          style={[
-            styles.icon, 
-            invertLeft && styles.inverted,
-            iconStyle
-          ]} 
+        <Image
+          source={leftIcon}
+          style={[styles.icon, invertLeft && styles.flip, iconStyle]}
           resizeMode="contain"
         />
       </TouchableOpacity>
 
-      {/* Botón derecho */}
-      <TouchableOpacity 
-        onPress={onRightPress} 
-        style={[
-          styles.button, 
-          rightPosition, 
-          size, 
-          rightButtonStyle
-        ]}
+      <TouchableOpacity
+        onPress={onRightPress}
+        style={[styles.button, rightPosition, size, rightStyle]}
         activeOpacity={0.7}
       >
-        <Image 
-          source={rightIcon} 
-          style={[
-            styles.icon, 
-            invertRight && styles.inverted,
-            iconStyle
-          ]} 
+        <Image
+          source={rightIcon}
+          style={[styles.icon, invertRight && styles.flip, iconStyle]}
           resizeMode="contain"
         />
       </TouchableOpacity>
@@ -110,10 +81,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   icon: {
-    width: "100%",
-    height: "100%",
+    width: "110%",
+    height: "110%",
   },
-  inverted: {
-    transform: [{ scaleX: -1 }]
+  flip: {
+    transform: [{ scaleX: -1 }],
   },
 });

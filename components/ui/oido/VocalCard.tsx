@@ -1,35 +1,44 @@
-// VocalCard.tsx
 import { View, Image, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
-export default function VocalCard({ 
-  letra, 
-  sonido, 
-  vocal, 
+interface Props {
+  letra: any;
+  sonido: any;
+  vocal: string;
+  onPress: (sonido: any, vocal: string) => void;
+  cardStyle?: object;
+  letterStyle?: object;
+  speakerStyle?: object;
+}
+
+export default function VocalCard({
+  letra,
+  sonido,
+  vocal,
   onPress,
-  cardStyle, // Este debe incluir position: 'absolute'
-  letterStyle, 
-  speakerStyle 
-}: any) {
+  cardStyle,
+  letterStyle,
+  speakerStyle,
+}: Props) {
   return (
     <View style={[styles.card, cardStyle]}>
       <TouchableOpacity
         onPress={() => onPress(sonido, vocal)}
         activeOpacity={0.7}
-        style={[styles.letterContainer, letterStyle]}
+        style={[styles.letterBox, letterStyle]}
       >
-        <Image source={letra} style={styles.letterImage} resizeMode="contain" />
+        <Image source={letra} style={styles.letter} resizeMode="contain" />
       </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => onPress(sonido, vocal)}
         activeOpacity={0.7}
-        style={[styles.speakerButton, speakerStyle]}
+        style={[styles.speakerBox, speakerStyle]}
       >
         <Image
           source={require("../../../assets/images/bocina.png")}
-          style={styles.speakerIcon}
+          style={styles.speaker}
           resizeMode="contain"
         />
       </TouchableOpacity>
@@ -39,22 +48,25 @@ export default function VocalCard({
 
 const styles = StyleSheet.create({
   card: {
+    position: "absolute",
+    width: "20%",
+    height: "30%",
     alignItems: "center",
     justifyContent: "center",
   },
-  letterContainer: {
+  letterBox: {
     width: width * 0.15,
     height: height * 0.25,
   },
-  letterImage: {
+  letter: {
     width: "100%",
     height: "100%",
   },
-  speakerButton: {
+  speakerBox: {
     width: 50,
     height: 50,
   },
-  speakerIcon: {
+  speaker: {
     width: "100%",
     height: "100%",
   },
