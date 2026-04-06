@@ -1,268 +1,296 @@
-import { View, Image, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
-import { useState, useEffect, useRef } from "react";
+import { View, Image, StyleSheet, Dimensions } from "react-native";
+import { useState, useEffect } from "react";
 import { Audio } from "expo-av";
 import { useRouter } from "expo-router";
+import NavigationButtons from "../components/ui/NavigationButtons";
+import VocalItem from "../components/ui/vista/VocalItem";
+import ObjectItem from "../components/ui/vista/ObjectItem";
+import ConnectionDots from "../components/ui/vista/ConnectionDots";
+import CelebrationModal from "../components/ui/vista/CelebrationModal";
 
-const { width, height } = Dimensions.get('window');
-const isLandscape = width > height;
+const { width, height } = Dimensions.get("window");
 
 const letterImages = {
-  A: require("../assets/images/vista/a.png"),
-  E: require("../assets/images/vista/e.png"),
-  I: require("../assets/images/vista/i.png"),
-  O: require("../assets/images/vista/o.png"),
-  U: require("../assets/images/vista/u.png"),
+  A: require("../assets/vista/a.png"),
+  E: require("../assets/vista/e.png"),
+  I: require("../assets/vista/i.png"),
+  O: require("../assets/vista/o.png"),
+  U: require("../assets/vista/u.png"),
 };
 
-export default function JuegoUnirScreen() {
+const systemSounds = {
+  correct: require("../assets/sounds/correct.mp3"),
+  error: require("../assets/sounds/error.mp3"),
+};
 
+export default function VistaScreen() {
   const router = useRouter();
-  const [selectedLetter, setSelectedLetter] = useState(null);
-  const [connections, setConnections] = useState([]);
-  const [letters, setLetters] = useState([]);
-  const [objects, setObjects] = useState([]);
-  const [letterPositions, setLetterPositions] = useState({});
-  const [objectPositions, setObjectPositions] = useState({});
-  
+  const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+  const [connections, setConnections] = useState<any[]>([]);
+  const [currentLetter, setCurrentLetter] = useState<any>(null);
+  const [distractorLetter, setDistractorLetter] = useState<any>(null);
+  const [currentObject, setCurrentObject] = useState<any>(null);
+  const [remainingVocals, setRemainingVocals] = useState<string[]>([]);
+  const [completedVocals, setCompletedVocals] = useState<string[]>([]);
+  const [letterPositions, setLetterPositions] = useState<Record<string, any>>({});
+  const [distractorPositions, setDistractorPositions] = useState<Record<string, any>>({});
+  const [objectPositions, setObjectPositions] = useState<Record<string, any>>({});
+  const [isMatched, setIsMatched] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [usedCombinations, setUsedCombinations] = useState<Set<string>>(new Set());
+
   const allData = {
     A: [
-      { name: "abeja", sound: require("../assets/sounds/abeja.mp3"), img: require("../assets/images/vista/abeja.png") },
-      { name: "avion", sound: require("../assets/sounds/avion.mp3"), img: require("../assets/images/vista/avion.png") },
-      { name: "arbol", sound: require("../assets/sounds/arbol.mp3"), img: require("../assets/images/vista/arbol.png") }
+      { name: "abeja", sound: require("../assets/sounds/abeja.mp3"), img: require("../assets/vista/abeja.png") },
+      { name: "avion", sound: require("../assets/sounds/avion.mp3"), img: require("../assets/vista/avion.png") },
+      { name: "arbol", sound: require("../assets/sounds/arbol.mp3"), img: require("../assets/vista/arbol.png") }
     ],
     E: [
-      { name: "elefante", sound: require("../assets/sounds/elefante.mp3"), img: require("../assets/images/vista/elefante.png") },
-      { name: "estrella", sound: require("../assets/sounds/estrella.mp3"), img: require("../assets/images/vista/estrella.png") },
-      { name: "espejo", sound: require("../assets/sounds/espejo.mp3"), img: require("../assets/images/vista/espejo.png") }
+      { name: "elefante", sound: require("../assets/sounds/elefante.mp3"), img: require("../assets/vista/elefante.png") },
+      { name: "estrella", sound: require("../assets/sounds/estrella.mp3"), img: require("../assets/vista/estrella.png") },
+      { name: "espejo", sound: require("../assets/sounds/espejo.mp3"), img: require("../assets/vista/espejo.png") }
     ],
     I: [
-      { name: "iguana", sound: require("../assets/sounds/iguana.mp3"), img: require("../assets/images/vista/iguana.png") },
-      { name: "isla", sound: require("../assets/sounds/isla.mp3"), img: require("../assets/images/vista/isla.png") },
-      { name: "iman", sound: require("../assets/sounds/iman.mp3"), img: require("../assets/images/vista/iman.png") }
+      { name: "iguana", sound: require("../assets/sounds/iguana.mp3"), img: require("../assets/vista/iguana.png") },
+      { name: "isla", sound: require("../assets/sounds/isla.mp3"), img: require("../assets/vista/isla.png") },
+      { name: "iman", sound: require("../assets/sounds/iman.mp3"), img: require("../assets/vista/iman.png") }
     ],
     O: [
-      { name: "oso", sound: require("../assets/sounds/oso.mp3"), img: require("../assets/images/vista/oso.png") },
-      { name: "oveja", sound: require("../assets/sounds/oveja.mp3"), img: require("../assets/images/vista/oveja.png") },
-      { name: "ojo", sound: require("../assets/sounds/ojo.mp3"), img: require("../assets/images/vista/ojo.png") }
+      { name: "oso", sound: require("../assets/sounds/oso.mp3"), img: require("../assets/vista/oso.png") },
+      { name: "oveja", sound: require("../assets/sounds/oveja.mp3"), img: require("../assets/vista/oveja.png") },
+      { name: "ojo", sound: require("../assets/sounds/ojo.mp3"), img: require("../assets/vista/ojo.png") }
     ],
     U: [
-      { name: "uva", sound: require("../assets/sounds/uva.mp3"), img: require("../assets/images/vista/uva.png") },
-      { name: "uniforme", sound: require("../assets/sounds/uniforme.mp3"), img: require("../assets/images/vista/uniforme.png") },
-      { name: "uñas", sound: require("../assets/sounds/uñas.mp3"), img: require("../assets/images/vista/uñas.png") }
+      { name: "uva", sound: require("../assets/sounds/uva.mp3"), img: require("../assets/vista/uva.png") },
+      { name: "uniforme", sound: require("../assets/sounds/uniforme.mp3"), img: require("../assets/vista/uniforme.png") },
+      { name: "uñas", sound: require("../assets/sounds/uñas.mp3"), img: require("../assets/vista/uñas.png") }
     ]
   };
 
   useEffect(() => {
     initializeGame();
+    setupAudio();
   }, []);
 
-  const initializeGame = () => {
-    const newLetters = [];
-    const newObjects = [];
-    
-    const vocales = ["A", "E", "I", "O", "U"];
-    const selectedVocales = vocales.sort(() => 0.5 - Math.random()).slice(0, 3);
-    
-    selectedVocales.forEach(vocal => {
-      const items = allData[vocal];
-      const randomItem = items[Math.floor(Math.random() * items.length)];
-      newLetters.push({ 
-        letra: vocal, 
-        img: letterImages[vocal]
-      });
-      newObjects.push({ ...randomItem, letra: vocal });
+  const setupAudio = async () => {
+    await Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: true,
     });
-    
-    const shuffledObjects = [...newObjects];
-    for (let i = shuffledObjects.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledObjects[i], shuffledObjects[j]] = [shuffledObjects[j], shuffledObjects[i]];
-    }
-    
-    setLetters(newLetters);
-    setObjects(shuffledObjects);
+  };
+
+  const playSound = async (soundFile: any) => {
+    const { sound } = await Audio.Sound.createAsync(soundFile);
+    await sound.playAsync();
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.didJustFinish) sound.unloadAsync();
+    });
+  };
+
+  const initializeGame = () => {
+    const vocales = ["A", "E", "I", "O", "U"];
+    const shuffledVocals = [...vocales].sort(() => 0.5 - Math.random());
+    setRemainingVocals(shuffledVocals);
+    setCompletedVocals([]);
     setConnections([]);
     setLetterPositions({});
+    setDistractorPositions({});
     setObjectPositions({});
     setSelectedLetter(null);
-  };
-
-  const playSound = async (soundFile) => {
-    try {
-      const { sound } = await Audio.Sound.createAsync(soundFile);
-      await sound.playAsync();
-    } catch (error) {
-      console.error("Error:", error);
+    setIsMatched(false);
+    setShowCelebration(false);
+    setUsedCombinations(new Set());
+    
+    if (shuffledVocals.length > 0) {
+      loadNextVocal(shuffledVocals[0]);
     }
   };
 
-  const handleLetterPress = (letra, event) => {
-    setSelectedLetter(letra);
-  };
-
-  const capturePosition = (id, type, event) => {
-    setTimeout(() => {
-      if (event.target && event.target.measure) {
-        event.target.measure((x, y, width, height, pageX, pageY) => {
-          const position = { 
-            x: pageX + width/2, 
-            y: pageY + height/2
-          };
-          
-          if (type === 'letter') {
-            setLetterPositions(prev => ({ ...prev, [id]: position }));
-          } else {
-            setObjectPositions(prev => ({ ...prev, [id]: position }));
-          }
-        });
-      }
-    }, 100);
-  };
-
-  const handleObjectPress = (obj, event) => {
-    if (!selectedLetter) return;
-
-    if (selectedLetter === obj.letra) {
-      playSound(obj.sound);
-      
-      const newConnection = {
-        letter: selectedLetter,
-        object: obj.name,
-        letterPosition: letterPositions[selectedLetter],
-        objectPosition: objectPositions[obj.name]
-      };
-      
-      setConnections([...connections, newConnection]);
-      setLetters(letters.filter(l => l.letra !== selectedLetter));
-      setObjects(objects.filter(o => o.name !== obj.name));
+  const getRandomDistractor = (correctLetra: string) => {
+    const vocales = ["A", "E", "I", "O", "U"];
+    const availableDistractors = vocales.filter(v => v !== correctLetra);
+    
+    const unusedDistractors = availableDistractors.filter(d => {
+      return !usedCombinations.has(`${correctLetra}-${d}`);
+    });
+    
+    let distractor;
+    if (unusedDistractors.length > 0) {
+      distractor = unusedDistractors[Math.floor(Math.random() * unusedDistractors.length)];
+    } else {
+      setUsedCombinations(new Set());
+      distractor = availableDistractors[Math.floor(Math.random() * availableDistractors.length)];
     }
+    
+    setUsedCombinations(prev => new Set([...prev, `${correctLetra}-${distractor}`]));
+    
+    return {
+      letra: distractor,
+      img: letterImages[distractor]
+    };
+  };
+
+  const loadNextVocal = (vocal: string) => {
+    const items = allData[vocal];
+    
+    const usedObjectsForVocal = connections
+      .filter(conn => conn.letter === vocal)
+      .map(conn => conn.object);
+    
+    let availableItems = items.filter(item => !usedObjectsForVocal.includes(item.name));
+    
+    if (availableItems.length === 0) {
+      availableItems = items;
+    }
+    
+    const selectedObject = availableItems[Math.floor(Math.random() * availableItems.length)];
+    const correctLetter = { letra: vocal, img: letterImages[vocal] };
+    const distractor = getRandomDistractor(vocal);
+    const positions = Math.random() < 0.5;
+    
+    setCurrentLetter(positions ? correctLetter : distractor);
+    setDistractorLetter(positions ? distractor : correctLetter);
+    setCurrentObject({ ...selectedObject, letra: vocal });
+    setIsMatched(false);
     setSelectedLetter(null);
   };
 
-  const getDotsBetween = (start, end) => {
-    if (!start || !end) return [];
-    
-    const dots = [];
-    const distance = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
-    const numDots = Math.floor(distance / 20);
-    
-    for (let i = 0; i <= numDots; i++) {
-      const t = i / numDots;
-      const x = start.x + (end.x - start.x) * t;
-      const y = start.y + (end.y - start.y) * t;
-      dots.push({ x, y });
-    }
-    
-    return dots;
+  const handleLetterPress = (letra: string) => {
+    if (!isMatched) setSelectedLetter(letra);
   };
 
-  const Celebration = () => {
-    if (letters.length === 0 && objects.length === 0 && connections.length > 0) {
-      return (
-        <View style={styles.celebrationOverlay}>
-          <View style={styles.celebrationCard}>
-            <Image 
-              source={require("../assets/images/star.png")} 
-              style={styles.starIcon}
-            />
-            <TouchableOpacity style={styles.playAgainButton} onPress={initializeGame}>
-              <Image 
-                source={require("../assets/images/play-again.png")}
-                style={styles.playAgainIcon}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
+  const captureLetterPosition = (letra: string, isDistractor: boolean, event: any) => {
+    if (event.target?.measure) {
+      event.target.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+        const position = { x: pageX + width / 2, y: pageY + height / 2 };
+        if (isDistractor) {
+          setDistractorPositions(prev => ({ ...prev, [letra]: position }));
+        } else {
+          setLetterPositions(prev => ({ ...prev, [letra]: position }));
+        }
+      });
     }
-    return null;
   };
+
+  const captureObjectPosition = (obj: any, event: any) => {
+    if (event.target?.measure) {
+      event.target.measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+        const position = { x: pageX + width / 2, y: pageY + height / 2 };
+        setObjectPositions(prev => ({ ...prev, [obj.name]: position }));
+      });
+    }
+  };
+
+  const handleObjectPress = async (obj: any) => {
+    if (!selectedLetter || isMatched) return;
+
+    if (selectedLetter === obj.letra) {
+      await playSound(systemSounds.correct);
+      await playSound(obj.sound);
+      
+      const correctLetterPosition = letterPositions[selectedLetter] || distractorPositions[selectedLetter];
+      
+      setConnections([...connections, {
+        letter: selectedLetter,
+        object: obj.name,
+        letterPosition: correctLetterPosition,
+        objectPosition: objectPositions[obj.name]
+      }]);
+      
+      setIsMatched(true);
+      const newCompleted = [...completedVocals, selectedLetter];
+      setCompletedVocals(newCompleted);
+      const newRemaining = remainingVocals.filter(v => v !== selectedLetter);
+      setRemainingVocals(newRemaining);
+      
+      setTimeout(() => {
+        if (newRemaining.length > 0) {
+          loadNextVocal(newRemaining[0]);
+        } else {
+          setShowCelebration(true);
+        }
+      }, 1500);
+    } else {
+      await playSound(systemSounds.error);
+      setSelectedLetter(null);
+    }
+  };
+
+  const handlePlayAgain = () => initializeGame();
+  const goToMenu = () => router.back();
+
+  if (!currentLetter || !currentObject || !distractorLetter) {
+    return (
+      <View style={styles.container}>
+        <Image source={require("../assets/images/vista-bg.png")} style={styles.background} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      
-      <Image
-        source={require("../assets/images/vista-bg.png")}
-        style={styles.background}
-      />
+      <Image source={require("../assets/images/vista-bg.png")} style={styles.background} />
 
       <View style={styles.gameArea}>
-        
-        <View style={StyleSheet.absoluteFill}>
-          {connections.map((conn, index) => {
-            const dots = getDotsBetween(conn.letterPosition, conn.objectPosition);
-            return dots.map((dot, dotIndex) => (
-              <Image
-                key={`${index}-${dotIndex}`}
-                source={require("../assets/images/ui/dot.png")}
-                style={[
-                  styles.dot,
-                  {
-                    position: 'absolute',
-                    left: dot.x - 6,
-                    top: dot.y - 6,
-                  }
-                ]}
-              />
-            ));
-          })}
-        </View>
-        
+        <ConnectionDots connections={connections} />
+
         <View style={styles.gameContent}>
-          
           <View style={styles.lettersContainer}>
-            {letters.map((item, i) => (
-              <TouchableOpacity 
-                key={i} 
-                onPress={(e) => {
-                  handleLetterPress(item.letra, e);
-                  capturePosition(item.letra, 'letter', e);
-                }}
-                style={[
-                  styles.letterCard,
-                  selectedLetter === item.letra && styles.selectedLetterCard
-                ]}
-              >
-                <Image source={item.img} style={styles.letterImage} />
-              </TouchableOpacity>
-            ))}
+            <VocalItem
+              letra={currentLetter.letra}
+              img={currentLetter.img}
+              isSelected={selectedLetter === currentLetter.letra}
+              onPress={handleLetterPress}
+              onLayout={(event) => captureLetterPosition(currentLetter.letra, false, event)}
+            />
+            
+            <View style={styles.distractorSpacing}>
+              <VocalItem
+                letra={distractorLetter.letra}
+                img={distractorLetter.img}
+                isSelected={selectedLetter === distractorLetter.letra}
+                onPress={handleLetterPress}
+                onLayout={(event) => captureLetterPosition(distractorLetter.letra, true, event)}
+              />
+            </View>
           </View>
 
           <View style={styles.objectsContainer}>
-            {objects.map((obj, i) => (
-              <TouchableOpacity 
-                key={i} 
-                onPress={(e) => {
-                  handleObjectPress(obj, e);
-                  capturePosition(obj.name, 'object', e);
-                }}
-                style={styles.objectCard}
-              >
-                <Image source={obj.img} style={styles.objectImage} />
-              </TouchableOpacity>
-            ))}
+            <ObjectItem
+              obj={currentObject}
+              onPress={handleObjectPress}
+              onLayout={captureObjectPosition}
+            />
           </View>
+        </View>
 
+        <View style={styles.progressContainer}>
+          {["A", "E", "I", "O", "U"].map((vocal) => (
+            <View
+              key={vocal}
+              style={[
+                styles.progressDot,
+                completedVocals.includes(vocal) && styles.progressDotCompleted,
+                currentLetter?.letra === vocal && styles.progressDotCurrent
+              ]}
+            />
+          ))}
         </View>
       </View>
 
-      <Celebration />
+      <CelebrationModal 
+        visible={showCelebration} 
+        onPlayAgain={handlePlayAgain}
+        onGoToMenu={goToMenu}
+      />
 
-      <View style={styles.bottomBar}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Image
-            source={require("../assets/images/back.png")}
-            style={styles.navIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={initializeGame}>
-          <Image
-            source={require("../assets/images/back.png")}
-            style={[styles.navIcon, { transform: [{ scaleX: -1 }] }]}
-          />
-        </TouchableOpacity>
-      </View>
-
+      <NavigationButtons
+        onLeftPress={goToMenu}
+        onRightPress={goToMenu}
+        leftPosition={{ left: "3%", top: "80%" }}
+        rightPosition={{ right: "3%", top: "80%" }}
+        buttonSize={70}
+      />
     </View>
   );
 }
@@ -283,115 +311,45 @@ const styles = StyleSheet.create({
   gameContent: {
     flex: 1,
     flexDirection: "row",
-    justifyContent: "space-evenly", 
+    justifyContent: "space-evenly",
     alignItems: "center",
-    paddingHorizontal: 10, 
+    paddingHorizontal: 10,
   },
   lettersContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    gap: 25, 
+    gap: 30,
+  },
+  distractorSpacing: {
+    marginTop: 20,
   },
   objectsContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    gap: 25, 
   },
-  letterCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    padding: 12, 
-    borderRadius: 25, 
-    width: 100, 
-    height: 100, 
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 4 }, 
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 5, 
-  },
-  selectedLetterCard: {
-    backgroundColor: "#FFD700",
-    transform: [{ scale: 1.05 }], 
-    borderWidth: 2, 
-    borderColor: "#FF6B6B",
-  },
-  objectCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    padding: 12, 
-    borderRadius: 25, 
-    width: 100, 
-    height: 100, 
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  letterImage: {
-    width: 90, 
-    height: 90, 
-    resizeMode: "contain",
-  },
-  objectImage: {
-    width: 85, 
-    height: 85, 
-    resizeMode: "contain",
-  },
-  dot: {
-    width: 12, 
-    height: 12, 
-    resizeMode: "contain",
-  },
-  bottomBar: {
+  progressContainer: {
     position: "absolute",
-    bottom: 15, 
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 30, 
-  },
-  navIcon: {
-    width: 50, 
-    height: 50, 
-  },
-  celebrationOverlay: {
-    position: "absolute",
-    top: 0,
+    bottom: 80,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.85)",
+    flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
+    gap: 15,
+    paddingVertical: 10,
   },
-  celebrationCard: {
-    alignItems: "center",
-    justifyContent: "center",
+  progressDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
   },
-  starIcon: {
-    width: 150, 
-    height: 150, 
-    marginBottom: 20,
+  progressDotCompleted: {
+    backgroundColor: "#4CAF50",
   },
-  playAgainButton: {
+  progressDotCurrent: {
     backgroundColor: "#FFD700",
-    borderRadius: 50, 
-    padding: 15, 
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  playAgainIcon: {
-    width: 60, 
-    height: 60, 
+    transform: [{ scale: 1.2 }],
   },
 });

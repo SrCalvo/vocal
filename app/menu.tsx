@@ -137,8 +137,8 @@ const styles = StyleSheet.create({
 
   btnOido: {
     position: "absolute",
-    top: "37%",
-    right: "22%",
+    top: "38%",
+    right: "18%",
     width: 150,
     height: 145,
   },
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   btnTacto: {
     position: "absolute",
     top: "38%",
-    left: "41.5%",
+    left: "45%",
     width: 150,
     height: 145,
   },
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   btnCasa: {
     position: "absolute",
     top: "78%",
-    left: "44.5%",
+    left: "45%",
   },
 
   // DECORACIONES
